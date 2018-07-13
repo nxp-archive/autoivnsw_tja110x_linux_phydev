@@ -172,9 +172,6 @@
  */
 #define DELAY_LENGTH              100U
 
-/* length of delay during two pollings (in ms) */
-#define POLL_PAUSE              50U
-
 /* possible test modes of the PHY */
 enum test_mode {
 	NO_TMODE = 1,
@@ -231,11 +228,18 @@ enum led_mode {
 #define SYSFS_FWDPHYREM    BIT(3)
 
 /* nxp specific data */
-struct nxp_specific_data {
+typedef struct {
 	int is_master;
+#ifdef CONFIG_POLL
 	int is_poll_setup;
 	int is_polling;
-};
+#else
+	int gpio;
+#endif
+} nxp_specific_data_t;
+
+/* convenience macro for accessing private data structure */
+#define PHY_PRIV(p) ((nxp_specific_data_t *)p->priv)
 
 /* register values of the different led modes */
 #define SNR_CLASS_NONE	(0x00000000U)
@@ -248,6 +252,7 @@ struct nxp_specific_data {
 #define SNR_CLASS_G	(0x000001C0U)
 
 /* Helper Function prototypes */
+static int get_link_status(struct phy_device *phydev);
 static int set_master_cfg(struct phy_device *phydev, int setMaster);
 static int get_master_cfg(struct phy_device *phydev);
 static int wait_on_condition(struct phy_device *phydev, int reg_addr,
@@ -262,10 +267,14 @@ static inline int phy_configure_bits(struct phy_device *phydev,
 				     int bit_value);
 static int nxp_resume(struct phy_device *phydev);
 static int nxp_ack_interrupt(struct phy_device *phydev);
+static int handle_interrupts(struct phy_device *phydev);
+
+#ifdef CONFIG_POLL
 static void poll(struct work_struct *work);
 static void setup_polling(struct phy_device *phydev);
 static void start_polling(struct phy_device *phydev);
 static void stop_polling(struct phy_device *phydev);
 
-static struct attribute *nxp_sysfs_entries[];
-static struct attribute_group nxp_attribute_group;
+/* length of delay during two pollings (in ms) */
+#define POLL_PAUSE              50U
+#endif
