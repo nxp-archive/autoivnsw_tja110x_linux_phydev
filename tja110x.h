@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NXP
+ * Copyright 2017 - 2018 NXP
  *
  * This program is free software; you can redistribute  it and/or modify it
  * under  the terms of  the GNU General  Public License as published by the
@@ -11,7 +11,11 @@
 #ifndef _NXP_PHY_H
 #define _NXP_PHY_H
 
- /* PHY IDs */
+#include <linux/version.h>
+
+/*******************************************************************************
+ * PHY IDs
+ ******************************************************************************/
 #define NXP_PHY_ID_TJA1100        (0x0180DC40U)
 #define NXP_PHY_ID_TJA1101        (0x0180DD00U)
 #define NXP_PHY_ID_TJA1102P0      (0x0180DC80U)
@@ -21,10 +25,10 @@
 /* masks out the revision number */
 #define NXP_PHY_ID_MASK           (0xFFFFFFF0U)
 
-#endif /* _NXP_PHY_H */
 
-/* NXP specific registers */
-
+/*******************************************************************************
+ * NXP specific registers
+ ******************************************************************************/
 /* extended_control register (TJA1100 and TJA1102) */
 #define MII_ECTRL                 (0x11U)
 /* configuration_1 register (TJA1100 and TJA1102) */
@@ -60,23 +64,6 @@
 #define ECTRL_LOOPBACK_MODE       (0x00000018U)
 #define ECTRL_CONFIG_EN           BIT(2)
 #define ECTRL_WAKE_REQUEST        BIT(0)
-#define CABLE_TEST_TIMEOUT        1U /* cable test takes <= 1*100us */
-
-/* register values of the different power modes */
-#define POWER_MODE_NOCHANGE       (0x00000000U)
-#define POWER_MODE_NORMAL         (0x00001800U)
-#define POWER_MODE_SLEEPREQUEST   (0x00005800U)
-#define POWER_MODE_STANDBY        (0x00006000U)
-#define POWER_MODE_SILENT         (0x00004800U)
-#define POWER_MODE_SLEEP          (0x00005000U)
-
-/* timeouts for different power mode transitions */
-#define POWER_MODE_TIMEOUT        200U
-#define SLEEP_REQUEST_TO          160U /* 16ms = 160*100us */
-
-/* duration necessary for a reliable wake up of the link partner (in us) */
-#define TJA100_WAKE_REQUEST_TIMEOUT_US     5000U
-#define TJA102_WAKE_REQUEST_TIMEOUT_US     1300U
 
 /* configuration_1 register */
 #define CFG1_MASTER_SLAVE         BIT(15)
@@ -157,6 +144,10 @@
 #define EXTSTAT_OPEN_DETECT       BIT(7)
 #define EXTSTAT_SHORT_DETECT      BIT(8)
 
+
+/*******************************************************************************
+ * BroadR-Reach indication flags
+ ******************************************************************************/
 /*
  * Indicator for BRR support in ESTATUS register
  * and in phydev->supported member.
@@ -167,12 +158,11 @@
 #define SUPPORTED_100BASET1_FULL  BIT(27)
 #define ADVERTISED_100BASET1_FULL BIT(27)
 
-/* length of delay during one loop iteration in
- * wait_on_condition (in us)
- */
-#define DELAY_LENGTH              100U
 
-/* possible test modes of the PHY */
+/*******************************************************************************
+ * Test modes
+ ******************************************************************************/
+/* available test modes of the PHY */
 enum test_mode {
 	NO_TMODE = 1,
 	TMODE1,
@@ -193,7 +183,11 @@ enum test_mode {
  /* scrambler, descrambler bypassed */
  #define ECTRL_TMODE6            (0x000180U)
 
-/* possible loopback modes of the PHY */
+
+/*******************************************************************************
+ * Loopback modes
+ ******************************************************************************/
+/* available loopback modes of the PHY */
 enum loopback_mode {
 	NO_LMODE = 1,
 	INTERNAL_LMODE,
@@ -206,7 +200,11 @@ enum loopback_mode {
 #define ECTRL_EXTERNAL_LMODE    (0x000008U)
 #define ECTRL_REMOTE_LMODE      (0x000018U)
 
-/* possible led modes of the PHY */
+
+/*******************************************************************************
+ * LED modes
+ ******************************************************************************/
+/* available led modes of the PHY */
 enum led_mode {
 	NO_LED_MODE = 1,
 	LINKUP_LED_MODE,
@@ -221,27 +219,21 @@ enum led_mode {
 #define CFG1_LED_SYMERR    (0x00000020U)
 #define CFG1_LED_CRSSIG    (0x00000030U)
 
-/* values written to sysfs nodes */
+
+/*******************************************************************************
+ * sysfs export: wakeup configuration
+ ******************************************************************************/
+/* options that can be configured via the 'wakeup_cfg' sysfs node */
 #define SYSFS_FWDPHYLOC    BIT(0)
 #define SYSFS_REMWUPHY     BIT(1)
 #define SYSFS_LOCWUPHY     BIT(2)
 #define SYSFS_FWDPHYREM    BIT(3)
 
-/* nxp specific data */
-typedef struct {
-	int is_master;
-#ifdef CONFIG_POLL
-	int is_poll_setup;
-	int is_polling;
-#else
-	int gpio;
-#endif
-} nxp_specific_data_t;
 
-/* convenience macro for accessing private data structure */
-#define PHY_PRIV(p) ((nxp_specific_data_t *)p->priv)
-
-/* register values of the different led modes */
+/*******************************************************************************
+ * SNR classes
+ ******************************************************************************/
+/* register values of the different SNR classes */
 #define SNR_CLASS_NONE	(0x00000000U)
 #define SNR_CLASS_A	(0x00000040U)
 #define SNR_CLASS_B	(0x00000080U)
@@ -251,10 +243,82 @@ typedef struct {
 #define SNR_CLASS_F	(0x00000180U)
 #define SNR_CLASS_G	(0x000001C0U)
 
-/* Helper Function prototypes */
+
+/*******************************************************************************
+ * Power modes
+ ******************************************************************************/
+/* register values of the different power modes */
+#define POWER_MODE_NOCHANGE       (0x00000000U)
+#define POWER_MODE_NORMAL         (0x00001800U)
+#define POWER_MODE_SLEEPREQUEST   (0x00005800U)
+#define POWER_MODE_STANDBY        (0x00006000U)
+#define POWER_MODE_SILENT         (0x00004800U)
+#define POWER_MODE_SLEEP          (0x00005000U)
+
+
+/*******************************************************************************
+ * Timing constants
+ ******************************************************************************/
+/* length of delay during one loop iteration in wait_on_condition() (in us) */
+#define DELAY_LENGTH              100U
+
+/* timeout for conducting a cable test */
+#define CABLE_TEST_TIMEOUT        1U /* 1*100us*/
+
+/* timeouts for different power mode transitions */
+#define POWER_MODE_TIMEOUT        200U /* 20ms = 200*100us */
+#define SLEEP_REQ_TIMEOUT         160U /* 16ms = 160*100us */
+
+/* duration necessary for a reliable wake up of the link partner (in us) */
+#define TJA100_WAKE_REQ_TIMEOUT   5000U
+#define TJA102_WAKE_REQ_TIMEOUT   1300U
+
+#ifdef CONFIG_POLL
+/* length of delay during two pollings (in ms) */
+#define POLL_PAUSE                50U
+#endif
+
+
+/*******************************************************************************
+ * Nxp specific data
+ ******************************************************************************/
+typedef struct {
+	bool is_master;
+#ifdef CONFIG_POLL
+	bool is_poll_setup;
+	bool is_polling;
+#else
+	int gpio;
+#endif
+} nxp_specific_data_t;
+
+
+/*******************************************************************************
+ * Macros
+ ******************************************************************************/
+/* convenience macro for accessing private data structure */
+#define PHY_PRIV(p) ((nxp_specific_data_t *)p->priv)
+
+/* Linux version dependent macros */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,5,0)
+#define PHYDEV_DEV dev
+#define PHYDEV_ADDR addr
+#define PHYDEV_BUS bus
+#define GET_PHYDEV(b, a) b->phy_map[a]
+#else
+#define PHYDEV_DEV mdio.dev
+#define PHYDEV_ADDR mdio.addr
+#define PHYDEV_BUS mdio.bus
+#define GET_PHYDEV(b, a) mdiobus_get_phy(b, a)
+#endif
+
+
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
 static int get_link_status(struct phy_device *phydev);
 static int set_master_cfg(struct phy_device *phydev, int setMaster);
-static int get_master_cfg(struct phy_device *phydev);
+static bool get_master_cfg(struct phy_device *phydev);
 static int wait_on_condition(struct phy_device *phydev, int reg_addr,
 			     int reg_mask, int cond, int timeout);
 static void set_link_control(struct phy_device *phydev,
@@ -274,7 +338,7 @@ static void poll(struct work_struct *work);
 static void setup_polling(struct phy_device *phydev);
 static void start_polling(struct phy_device *phydev);
 static void stop_polling(struct phy_device *phydev);
-
-/* length of delay during two pollings (in ms) */
-#define POLL_PAUSE              50U
 #endif
+
+
+#endif /* _NXP_PHY_H */

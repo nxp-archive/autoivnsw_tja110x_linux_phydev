@@ -22,6 +22,10 @@ v0.4: (10.07.2018)
 -Support for interrupts
 -Added CONFIG_STANDALONE_PHY switch to enable PHYs not connected to a linux ethernet/switch interface
 
+v0.5: (31.08.2018)
+-Support for multiple Linux versions (see 'Supported Linux versions')
+-Bug fixes
+
 ------------------------------------------------------------
 Table of Contents
 1) TJA110X loading
@@ -30,7 +34,8 @@ Table of Contents
 4) DTS Information
 5) Compile time configuration
 6) Interrupts
-7) Limitations and known issues
+7) Supported Linux versions
+8) Limitations and known issues
 -------------------------------------------------------------
 
 1) TJA110X loading
@@ -100,7 +105,8 @@ To choose between managed and autonomous mode, the kernel module parameter "mana
 - CONFIG_TJA1102_FIX: If this macro is defined, the TJA1102_p1 driver is loaded. It needs to be ensured, that no other mdio device with phy id 0 is present
 - CONFIG_POLL: See Section Interrupts for more information
 - CONFIG_STANDALONE_PHY: (only meaningful if CONFIG_POLL is set)
-	If this macro is defined, some phy functionality can be used without an attached netdevice. This is mainly intended for development/debugging purposes.
+	WARNING: This is mainly intended for development/debugging purposes.
+	If this macro is defined, some phy functionality can be used without an attached netdevice.
 	During probing, config_init is called manually to initialize the phy and and a netdevice_notifier is registered, that starts/stops polling according to some netdev state.
 	Using the fix requires the following macros to be set:
 	- MDIO_INTERFACE_NAME: Name of the network interface that controls the mdio bus, to which the phy(s) is/are connected to (for example "eth0")
@@ -117,7 +123,11 @@ The driver supports two methods for reading and reacting to interrupts:
   The entry may look like: "irq-gpio = <&siul2 18 GPIO_ACTIVE_LOW>;",
   where siul2 is the interrupt controller of the gpio and 18 is the number of the GPIO to be used. The GPIO_ACTIVE_LOW flag indicates, that the INT_N pin is active low.
 
-7) Limitations and known issues
+7) Supported Linux versions
+The driver was tested with Linux v4.1.26 and Linux v4.14.34.
+However, it should work for every Linux version that is v4.0 or newer.
+
+8) Limitations and known issues
 - The TJA1100 disables SMI when entering sleep. Once entered, it can only be woken up by bus activity or via the WAKE pin
 
 - MDIO Timeouts on interface down (only if CONFIG_STANDALONE_PHY is used, for example on shutdown)
