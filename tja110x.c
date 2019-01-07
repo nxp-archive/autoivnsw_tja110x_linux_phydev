@@ -125,6 +125,10 @@ static int nxp_config_init(struct phy_device *phydev)
 		dev_alert(&phydev->PHYDEV_DEV, "initializing phy %x\n", phydev->PHYDEV_ADDR);
 
 	/* set features of the PHY */
+	phydev->supported   = 0;
+	phydev->advertising = 0;
+	phydev->autoneg     = AUTONEG_DISABLE;
+
 	reg_val = phy_read(phydev, MII_BMSR);
 	if (reg_val < 0)
 		goto phy_read_error;
@@ -137,7 +141,6 @@ static int nxp_config_init(struct phy_device *phydev)
 		if (reg_val & ESTATUS_100T1_FULL) {
 			/* update phydev to include the supported features */
 			phydev->supported |= SUPPORTED_100BASET1_FULL;
-			phydev->advertising |= ADVERTISED_100BASET1_FULL;
 		}
 	}
 
@@ -1316,6 +1319,19 @@ phy_set_loopback_error:
 phy_configure_error:
 	dev_err(&phydev->PHYDEV_DEV, "phy r/w error: setting loopback mode failed\n");
 	return err;
+}
+
+/* enable or disable loopback mode */
+static int __maybe_unused nxp_set_loopback(struct phy_device *phydev, bool enable)
+{
+	int ret;
+
+	if (enable)
+		ret = enter_loopback_mode(phydev, INTERNAL_LMODE);
+	else
+		ret = enter_loopback_mode(phydev, NO_LMODE);
+
+	return ret;
 }
 
 /* helper function, enters the led mode specified by lmode
@@ -2587,6 +2603,9 @@ static struct phy_driver nxp_drivers[] = {
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(4,5,0)
 	.driver = {.owner = THIS_MODULE},
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,1)
+	.set_loopback = nxp_set_loopback,
+#endif
 	},
 	{
 	.phy_id = NXP_PHY_ID_TJA1102P0,
@@ -2606,6 +2625,9 @@ static struct phy_driver nxp_drivers[] = {
 	.did_interrupt = &nxp_did_interrupt,
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(4,5,0)
 	.driver = {.owner = THIS_MODULE},
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,1)
+	.set_loopback = nxp_set_loopback,
 #endif
 	},
 	{
@@ -2627,6 +2649,9 @@ static struct phy_driver nxp_drivers[] = {
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(4,5,0)
 	.driver = {.owner = THIS_MODULE},
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,1)
+	.set_loopback = nxp_set_loopback,
+#endif
 	},
 	{
 	.phy_id = NXP_PHY_ID_TJA1102S,
@@ -2646,6 +2671,9 @@ static struct phy_driver nxp_drivers[] = {
 	.did_interrupt = &nxp_did_interrupt,
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(4,5,0)
 	.driver = {.owner = THIS_MODULE},
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,1)
+	.set_loopback = nxp_set_loopback,
 #endif
 	}
 #ifdef CONFIG_TJA1102_FIX
@@ -2667,6 +2695,9 @@ static struct phy_driver nxp_drivers[] = {
 	.did_interrupt = &nxp_did_interrupt,
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(4,5,0)
 	.driver = {.owner = THIS_MODULE},
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,1)
+	.set_loopback = nxp_set_loopback,
 #endif
 	}
 #endif

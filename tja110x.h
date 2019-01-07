@@ -155,8 +155,7 @@
  * include/uapi/linux/ethtool.h
  */
 #define ESTATUS_100T1_FULL        BIT(7)
-#define SUPPORTED_100BASET1_FULL  BIT(27)
-#define ADVERTISED_100BASET1_FULL BIT(27)
+#define SUPPORTED_100BASET1_FULL  SUPPORTED_100baseT_Full
 
 
 /*******************************************************************************
